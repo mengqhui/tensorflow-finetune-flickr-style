@@ -6,34 +6,40 @@ from network import *
 from datetime import datetime
 
 def main():
-    # Dataset path
+    # Dataset path 数据集路径
     train_list = '/path/to/data/flickr_style/train.txt'
     test_list = '/path/to/data/flickr_style/test.txt'
 
-    # Learning params
+    # Learning params 
+    #学习步长以及总迭代次数
     learning_rate = 0.001
     training_iters = 12800 # 10 epochs
+    #每个batch的大小，batch即每次输入训练的图像的数目
     batch_size = 50
+    #每20次迭代显示一次，每460次迭代测试一次训练结果
     display_step = 20
     test_step = 640 # 0.5 epoch
 
-    # Network params
+    # Network params 分类的类别
     n_classes = 20
+    #drop_out初始比率
     keep_rate = 0.5
 
     # Graph input
+    #输入数据和标签，使用palceholder作为输入数据和标签存放的结构，方便之后更换batch
     x = tf.placeholder(tf.float32, [batch_size, 227, 227, 3])
     y = tf.placeholder(tf.float32, [None, n_classes])
+    #控制drop_out的变量
     keep_var = tf.placeholder(tf.float32)
 
-    # Model
+    # Model 构建一个alexnet,keep_var控制drop_out的数目
     pred = Model.alexnet(x, keep_var)
 
-    # Loss and optimizer
+    # Loss and optimizer loss函数和优化方式，这里loss选择的是交叉熵均值。优化为梯度下降
     loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(pred, y))
     optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(loss)
 
-    # Evaluation
+    # Evaluation 评判模型输出结果和真实标签之间的差异
     correct_pred = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
@@ -48,7 +54,7 @@ def main():
         print 'Init variable'
         sess.run(init)
         
-        # Load pretrained model
+        # Load pretrained model 载入之前的训练数据（除了fc8层）
         load_with_skip('caffenet.npy', sess, ['fc8']) # Skip weights from fc8
         
         print 'Start training'
